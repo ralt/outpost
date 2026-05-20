@@ -29,8 +29,11 @@ Two slash commands inside Claude:
   (commits, uncommitted edits, updated session transcript), resumes
   locally.
 
-While outpost is running it sits invisibly behind `~/.claude/`, so
-Claude Code itself keeps working exactly as today.
+Under the hood, outpost runs a **FUSE filesystem** mounted at
+`~/.claude/` — every read and write transparently passes through to a
+real backing directory on disk. Claude Code keeps working exactly as
+today, while outpost taps every session-file write so it can stream
+the transcript to your remote in real time.
 
 ## Install
 

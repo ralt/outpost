@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>outpost — Hand off your Claude Code session to a remote machine</title>
+    <meta name="description" content="Outpost lets your Claude Code agent keep working on a remote dev box while your laptop is closed. Type /send-away to hand off, /bring-back to resume locally.">
+    <style>
+        :root {
+            --bg: #f6f6f9;
+            --surface: #ffffff;
+            --accent: #4361ee;
+            --accent-light: #3a56d4;
+            --text: #1a1a2e;
+            --text-muted: #4e4e66;
+            --border: #e0e0e8;
+            --glow: rgba(67,97,238,.06);
+        }
+
+        @media(prefers-color-scheme:dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #0f0f1a;
+                --surface: #1a1a2e;
+                --accent: #6c84f7;
+                --accent-light: #8da0ff;
+                --text: #e0e0e0;
+                --text-muted: #9a9ab0;
+                --border: #2a2a3e;
+                --glow: rgba(108,132,247,.08);
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0f0f1a;
+            --surface: #1a1a2e;
+            --accent: #6c84f7;
+            --accent-light: #8da0ff;
+            --text: #e0e0e0;
+            --text-muted: #9a9ab0;
+            --border: #2a2a3e;
+            --glow: rgba(108,132,247,.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 0 2rem; }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 6rem 2rem 4rem;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero .tagline {
+            font-size: 1.4rem;
+            color: var(--text-muted);
+            max-width: 640px;
+            margin: 0 auto 2rem;
+        }
+        .hero .cta-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .hero .cta {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: var(--accent);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+        }
+        .hero .cta:hover {
+            background: var(--accent-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px var(--glow);
+        }
+        .hero .cta.secondary {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            padding: calc(0.8rem - 2px) calc(2rem - 2px);
+        }
+        .hero .cta.secondary:hover {
+            background: var(--glow);
+        }
+
+        /* Story callout */
+        .story {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem 2.25rem;
+            margin: 2rem 0;
+            font-size: 1.05rem;
+            color: var(--text-muted);
+        }
+        .story p + p { margin-top: 0.85rem; }
+        .story strong { color: var(--text); }
+
+        /* Sections */
+        .section {
+            padding: 4rem 0;
+        }
+        .section h2 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        /* Steps */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+        }
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .step:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px var(--glow);
+        }
+        .step .number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .step h3 { margin-bottom: 0.5rem; }
+        .step p { color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .feature {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        .feature:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px var(--glow);
+        }
+        .feature h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+        .feature p { color: var(--text-muted); font-size: 0.95rem; }
+        .feature code {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85em;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 0.05em 0.4em;
+            border-radius: 4px;
+        }
+
+        /* Terminal mockup */
+        .terminal {
+            background: #0f0f1a;
+            color: #e0e0e0;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin: 0 auto;
+            max-width: 760px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+        }
+        .terminal-bar {
+            background: #1a1a2e;
+            padding: 0.55rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            border-bottom: 1px solid #2a2a3e;
+        }
+        .terminal-bar .dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+        }
+        .terminal-bar .dot.red    { background: #ff5f57; }
+        .terminal-bar .dot.yellow { background: #febc2e; }
+        .terminal-bar .dot.green  { background: #28c840; }
+        .terminal-bar .title {
+            margin-left: 0.75rem;
+            font-size: 0.78rem;
+            color: #9a9ab0;
+        }
+        .terminal-body {
+            padding: 1.25rem 1.5rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .terminal-body .prompt    { color: #6c84f7; }
+        .terminal-body .cmd       { color: #e0e0e0; }
+        .terminal-body .ok        { color: #28c840; }
+        .terminal-body .muted     { color: #6b7280; }
+        .terminal-body .accent    { color: #8da0ff; }
+
+        /* Code blocks (for the Try it section) */
+        .code-block {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            margin: 0.75rem 0;
+        }
+        .code-block .comment { color: #6b7280; }
+        .code-block .cmd { color: #a5b4fc; }
+
+        /* Setup steps (vertical cards with code) */
+        .setup-steps {
+            display: grid;
+            gap: 1.25rem;
+        }
+        .setup-step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .setup-step h3 {
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+        .setup-step p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 0.4rem;
+        }
+        .setup-step p + p, .setup-step .code-block + p { margin-top: 0.65rem; }
+        .setup-step a { color: var(--accent); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 44px;
+            height: 24px;
+            cursor: pointer;
+            padding: 2px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        .theme-toggle:hover { border-color: var(--accent); }
+        .theme-toggle .knob {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .theme-toggle .knob svg {
+            width: 11px;
+            height: 11px;
+            color: var(--surface);
+        }
+        .theme-toggle[aria-checked="true"] .knob {
+            transform: translateX(20px);
+        }
+
+        /* Focus */
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion */
+        @media(prefers-reduced-motion:reduce) {
+            *, *::before, *::after {
+                transition: none !important;
+                animation: none !important;
+            }
+            .hero .cta:hover, .step:hover, .feature:hover { transform: none; }
+            .theme-toggle .knob { transition: none; }
+        }
+
+        /* Responsive */
+        @media(max-width:480px) {
+            .hero { padding: 4rem 1.5rem 3rem; }
+            .hero h1 { font-size: 2.5rem; }
+            .hero .tagline { font-size: 1.1rem; }
+            .container { padding: 0 1.5rem; }
+            .story { padding: 1.5rem 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" role="switch" aria-checked="false" aria-label="Toggle dark mode">
+    <span class="knob">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </span>
+</button>
+
+<div class="hero">
+    <h1>outpost</h1>
+    <p class="tagline">Hand off your Claude Code session to a remote machine so it keeps working headlessly while you&rsquo;re away. Bring the result back when you&rsquo;re ready.</p>
+    <div class="cta-row">
+        <a href="https://github.com/ralt/outpost" class="cta">View on GitHub</a>
+        <a href="#try-it" class="cta secondary">Try it</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <section class="story">
+        <p>I&rsquo;m pairing with Claude on my laptop. I need to step away &mdash; close the lid, go to a meeting, get on a flight. I want the agent to keep working <strong>autonomously</strong> on my configured dev box, picking up exactly where we left off.</p>
+        <p>When I&rsquo;m back, I type <code>/bring-back</code> and resume work locally with the remote&rsquo;s progress applied. The agent on the remote is fully headless &mdash; there&rsquo;s nothing to attach to, by design. &ldquo;Work while I&rsquo;m away&rdquo; is the whole point.</p>
+    </section>
+
+    <section class="section">
+        <h2>How it works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="number">1</div>
+                <h3>Type <code>/send-away</code></h3>
+                <p>Right inside Claude. Outpost ships your project to your dev box and launches a headless agent there with your full session context.</p>
+            </div>
+            <div class="step">
+                <div class="number">2</div>
+                <h3>Walk away</h3>
+                <p>Close your laptop, get on the train. The agent keeps working &mdash; thinking, editing, running tools &mdash; until it decides the task is done.</p>
+            </div>
+            <div class="step">
+                <div class="number">3</div>
+                <h3>Type <code>/bring-back</code></h3>
+                <p>Stops the remote agent, pulls back its commits, uncommitted edits, and updated session transcript. You resume locally where it left off.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>What it looks like</h2>
+        <div class="terminal">
+            <div class="terminal-bar">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+                <span class="title">claude &mdash; ~/projects/my-app</span>
+            </div>
+<div class="terminal-body"><span class="prompt">&gt;</span> <span class="cmd">/send-away</span>
+
+<span class="ok">✓</span> Project: -home-alice-projects-my-app
+<span class="ok">✓</span> Worktree reconciled to feature/x @ a3f9c1
+<span class="ok">✓</span> Uncommitted: 12 hunks across 4 files / 3 untracked files
+<span class="ok">✓</span> 2 agents launched headlessly:
+    <span class="muted">-</span> <span class="accent">4f8a2e1c</span> → PID 31204
+    <span class="muted">-</span> <span class="accent">9c7d1f3b</span> → PID 31207
+<span class="ok">✓</span> Run `outpost bring-back` when you&rsquo;re back.
+
+<span class="muted"># … hours later, lid closed, agent kept going …</span>
+
+<span class="prompt">&gt;</span> <span class="cmd">/bring-back</span>
+
+<span class="ok">✓</span> Project: -home-alice-projects-my-app
+<span class="ok">✓</span> 14 commits fast-forwarded
+<span class="ok">✓</span> 23 hunks, 6 untracked files applied
+<span class="ok">✓</span> 2 session files pulled
+</div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>What you get</h2>
+        <div class="features">
+            <div class="feature">
+                <h3>Invisible while it&rsquo;s idle</h3>
+                <p>Outpost runs a <strong>FUSE filesystem</strong> mounted at <code>~/.claude/</code>: every read and write transparently passes through to a real backing directory on disk. Claude Code keeps working exactly as today &mdash; same paths, same files, same behaviour &mdash; while outpost taps every session-file write to stream it to the remote in real time. You only notice it when you type one of the slash commands.</p>
+            </div>
+            <div class="feature">
+                <h3>Headless &mdash; nothing to attach to</h3>
+                <p>The remote agent runs detached. No tmux, no screen, no PTY. It just works in the background until the task is done or until you bring it back. The whole point is &ldquo;work while I&rsquo;m away&rdquo;, not &ldquo;watch a remote session.&rdquo;</p>
+            </div>
+            <div class="feature">
+                <h3>Picks up exactly where you left off</h3>
+                <p>Your full session transcript ships to the remote, so the agent has every turn of context. When you bring it back, the remote&rsquo;s updated transcript flows into your local session &mdash; you can resume with <code>claude --resume</code> and keep going.</p>
+            </div>
+            <div class="feature">
+                <h3>Brings work back, not just code</h3>
+                <p>Bring-back pulls everything: new commits via git, uncommitted edits applied as a patch, untracked files via tar, and the new session transcript. Your local repo ends up looking like you did the work yourself.</p>
+            </div>
+            <div class="feature">
+                <h3>One SSH endpoint, no fuss</h3>
+                <p>You point outpost at one dev box and it handles everything &mdash; cloning, pushing, fetching, file transfer, agent launch. No <code>tmux</code>, no <code>screen</code>, no fiddly remote setup. Just <code>ssh user@host</code> and a matching <code>$HOME</code>.</p>
+            </div>
+            <div class="feature">
+                <h3>Multiple Claude sessions, parallel</h3>
+                <p>If you have several Claude windows open on the same project, each one becomes its own headless agent on the remote. They run in parallel, each with their own log file, each independently brought back.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="try-it">
+        <h2>Try it</h2>
+        <div class="setup-steps">
+            <div class="setup-step">
+                <h3>Install</h3>
+                <p>Clone the repo and run the install script. It builds outpost, drops a default config at <code>~/.config/outpost/config.ini</code>, and starts it as a user service so it&rsquo;s up every time you log in.</p>
+                <div class="code-block"><span class="cmd">git clone</span> https://github.com/ralt/outpost<br><span class="cmd">cd</span> outpost && <span class="cmd">./scripts/install.sh</span></div>
+            </div>
+            <div class="setup-step">
+                <h3>Point it at your dev box</h3>
+                <p>Edit the <code>[remote]</code> section of <code>~/.config/outpost/config.ini</code>:</p>
+                <div class="code-block"><span class="comment"># ~/.config/outpost/config.ini</span><br>[remote]<br>host = alice@dev-box.example.com<br>port = 22<br>identity_file = /home/alice/.ssh/id_ed25519</div>
+                <p>Full setup details &mdash; SSH access, matching <code>$HOME</code>, what binaries need to be on <code>PATH</code>, and a troubleshooting table mapped to every error code outpost can return &mdash; live in the <a href="https://github.com/ralt/outpost/blob/main/docs/remote-setup.md">remote setup guide</a>.</p>
+            </div>
+            <div class="setup-step">
+                <h3>Send-away</h3>
+                <p>From any Claude project, type <code>/send-away</code>. Outpost ships the project to your dev box, launches a headless agent there, and tells you to walk away. Come back any time and type <code>/bring-back</code>.</p>
+            </div>
+            <div class="setup-step">
+                <h3>Want to try it first without setting up a real dev box?</h3>
+                <p>There&rsquo;s a Docker-based fake remote you can spin up locally. It mirrors your username and <code>$HOME</code>, trusts your SSH key, and ships a stub <code>claude</code> binary so the round trip works end-to-end.</p>
+                <div class="code-block"><span class="cmd">./scripts/dev-remote.sh up</span>     <span class="comment"># spin up the test remote + rewrite config</span><br><span class="cmd">./scripts/dev-remote.sh down</span>   <span class="comment"># clean up when you're done</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Heads up</h2>
+        <div class="features">
+            <div class="feature">
+                <h3>Matching <code>$HOME</code> required</h3>
+                <p>Claude bakes absolute paths into session files, so the remote needs the same <code>$HOME</code> as your laptop. In practice that means same username + same OS family. Outpost checks this at connect time and refuses to operate on a mismatch.</p>
+            </div>
+            <div class="feature">
+                <h3>Local edits during a send-away are discarded</h3>
+                <p>Once you&rsquo;ve sent the project away, the remote is the live copy. Anything you type or edit locally in the meantime &mdash; including Claude&rsquo;s own trailing turns &mdash; gets overwritten when you bring the project back. The CLI prompts <code>y/N</code> first.</p>
+            </div>
+            <div class="feature">
+                <h3>Linux + FUSE only, for now</h3>
+                <p>Outpost mounts a FUSE overlay on <code>~/.claude/</code>, so it needs a Linux kernel with unprivileged FUSE (Ubuntu 22.04+, Debian 12+, Fedora 36+, Arch). macOS could work via macFUSE later. Windows is not on the roadmap.</p>
+            </div>
+            <div class="feature">
+                <h3>One remote at a time</h3>
+                <p>One outpost daemon talks to one configured dev box. No fan-out, no load balancing, no orchestration. If you want a different remote for a different project, you swap the config and reload.</p>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<footer>
+    <p>Source on <a href="https://github.com/ralt/outpost">GitHub</a>. Design docs in <a href="https://github.com/ralt/outpost/tree/main/specs">specs/</a>.</p>
+</footer>
+
+<script>
+(function(){
+    var toggle=document.querySelector('.theme-toggle');
+    var root=document.documentElement;
+    var sun=toggle.querySelector('.icon-sun');
+    var moon=toggle.querySelector('.icon-moon');
+    var stored=localStorage.getItem('theme');
+    var prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    var dark=stored?stored==='dark':prefersDark;
+
+    function apply(d){
+        dark=d;
+        root.setAttribute('data-theme',d?'dark':'light');
+        toggle.setAttribute('aria-checked',String(d));
+        sun.style.display=d?'none':'block';
+        moon.style.display=d?'block':'none';
+    }
+
+    apply(dark);
+
+    toggle.addEventListener('click',function(){
+        apply(!dark);
+        localStorage.setItem('theme',dark?'dark':'light');
+    });
+
+    window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(e){
+        if(!localStorage.getItem('theme')){apply(e.matches)}
+    });
+})();
+</script>
+
+</body>
+</html>
