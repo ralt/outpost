@@ -1,0 +1,20 @@
+[Unit]
+Description=outpost FUSE overlay + remote sync for ~/.claude
+After=default.target
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=%h/.local/bin/outpost daemon
+ExecStop=%h/.local/bin/outpost stop
+Restart=on-failure
+RestartSec=2
+
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.claude %h/.local/share/outpost %h/.cache/outpost %t
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=default.target

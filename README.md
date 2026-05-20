@@ -4,10 +4,10 @@ Hand off your Claude Code session to a remote machine so it can keep
 working headlessly while you're away, then bring the result back when
 you're ready.
 
-> **🚧 Very early software.** Outpost is currently *spec'd*, not built —
-> the [`specs/`](specs/) directory describes the design end-to-end; the
-> code has not been written yet. If you found this repo expecting to
-> `go install` something, check back later.
+> **🚧 Early software.** Implementation is in tree (`go build ./...` is
+> green) and a full send-away/bring-back round trip works against a Docker
+> dev remote (`scripts/dev-remote.sh up`). It is not battle-tested against
+> a real Claude session yet. Expect rough edges.
 
 I'm pairing with Claude on my laptop. I need to step away — close the
 lid, go to a meeting, get on a flight. I want the agent to keep working
@@ -41,19 +41,44 @@ or until you bring it back.
 
 ## Status
 
-| Area                                         | State        |
-| -------------------------------------------- | ------------ |
-| Design specs                                 | ✅ Locked    |
-| Go module + skeleton                         | 🚧 Pending   |
-| FUSE passthrough + virtual `commands/` overlay | 🚧 Pending |
-| SSH client + go-git push transport           | 🚧 Pending   |
-| Project watcher + background mirror push     | 🚧 Pending   |
-| Continuous session-file streaming            | 🚧 Pending   |
-| `send-away` / `bring-back` pipeline          | 🚧 Pending   |
-| Uncommitted-delta ship/apply                 | 🚧 Pending   |
-| systemd user unit + install script           | 🚧 Pending   |
+| Area                                           | State                                                                 |
+| ---------------------------------------------- | --------------------------------------------------------------------- |
+| Design specs                                   | ✅ Locked                                                             |
+| Go module + skeleton                           | ✅ Built                                                              |
+| FUSE passthrough + virtual `commands/` overlay | ✅ Built                                                              |
+| SSH client + go-git push transport             | ✅ Built (push/fetch dials its own conn — see `internal/sync/push.go`) |
+| Project watcher + background mirror push       | ✅ Built                                                              |
+| Continuous session-file streaming              | ✅ Built (sftp `WriteAt`, debounced)                                  |
+| `send-away` / `bring-back` pipeline            | ✅ Built — round-trip verified against the Docker dev remote          |
+| Uncommitted-delta ship/apply                   | ✅ Built (diff `--binary HEAD` + tar of untracked)                    |
+| systemd user unit + install script             | ✅ Built (`scripts/install.sh`, `scripts/uninstall.sh`)                |
+| Real-Claude end-to-end test                    | 🚧 Pending — only exercised against the stub `claude` in the dev remote |
 
-Nothing is runnable yet.
+## Try it locally
+
+```bash
+# 1. Spin up a Docker container that pretends to be the remote.
+./scripts/dev-remote.sh up
+
+# 2. Install the daemon as a `systemd --user` unit (this also migrates ~/.claude
+#    into the backing dir, so back up first if you care about its contents).
+./scripts/install.sh
+
+# 3. From any Claude project directory:
+outpost status
+outpost send-away
+# … walk away …
+outpost bring-back --yes
+```
+
+Tear the dev container down with `./scripts/dev-remote.sh down`.
+
+## Setting up the remote
+
+The remote host needs SSH access, a matching `$HOME`, and a few binaries
+on its `PATH`. See **[docs/remote-setup.md](docs/remote-setup.md)** for a
+TL;DR command block, step-by-step setup, and a troubleshooting table
+mapped to the error codes the daemon returns.
 
 ## How it works
 
@@ -81,10 +106,12 @@ A few things that aren't obvious from the name:
   paths baked in. For `claude --resume` to work on the remote, the
   remote cwd must be byte-identical to local; we check `echo $HOME`
   at connect time and refuse to operate on a mismatch.
-- **One SSH connection, period.** `golang.org/x/crypto/ssh` plus
-  go-git's push transport, all multiplexed onto a single TCP +
-  single auth handshake. No ControlMaster, no shelling out to git
-  for protocol.
+- **One SSH connection** for everything *except* go-git push/fetch.
+  `golang.org/x/crypto/ssh` carries exec, sftp, and session streaming
+  on a single TCP + single auth. go-git's transport doesn't expose a
+  hook for plugging in an existing `ssh.Client` in v5, so push/fetch
+  open their own short-lived connections — a documented deviation from
+  spec 05.
 - **TOFU on host keys.** First connection pins the remote's host key
   to `~/.ssh/known_hosts`; subsequent mismatches are hard-rejected.
 - **Local writes during `owner=remote` are noise.** They're not
@@ -93,4 +120,4 @@ A few things that aren't obvious from the name:
 
 ## License
 
-TBD. (Pre-implementation; happy to revisit when there's code.)
+TBD.
