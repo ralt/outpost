@@ -433,24 +433,12 @@
         <h2>What you get</h2>
         <div class="features">
             <div class="feature">
-                <h3>Invisible while it&rsquo;s idle</h3>
-                <p>Outpost runs a <strong>FUSE filesystem</strong> mounted at <code>~/.claude/</code>: every read and write transparently passes through to a real backing directory on disk. Claude Code keeps working exactly as today &mdash; same paths, same files, same behaviour &mdash; while outpost taps every session-file write to stream it to the remote in real time. You only notice it when you type one of the slash commands.</p>
-            </div>
-            <div class="feature">
-                <h3>Headless &mdash; nothing to attach to</h3>
-                <p>The remote agent runs detached. No tmux, no screen, no PTY. It just works in the background until the task is done or until you bring it back. The whole point is &ldquo;work while I&rsquo;m away&rdquo;, not &ldquo;watch a remote session.&rdquo;</p>
-            </div>
-            <div class="feature">
-                <h3>Picks up exactly where you left off</h3>
-                <p>Your full session transcript ships to the remote, so the agent has every turn of context. When you bring it back, the remote&rsquo;s updated transcript flows into your local session &mdash; you can resume with <code>claude --resume</code> and keep going.</p>
+                <h3>Fully transparent</h3>
+                <p>Outpost mounts a <strong>FUSE filesystem</strong> at <code>~/.claude/</code> &mdash; every read and write passes straight through to a real directory on disk at kernel speed. Never in your way, incredibly efficient.</p>
             </div>
             <div class="feature">
                 <h3>Brings work back, not just code</h3>
                 <p>Bring-back pulls everything: new commits via git, uncommitted edits applied as a patch, untracked files via tar, and the new session transcript. Your local repo ends up looking like you did the work yourself.</p>
-            </div>
-            <div class="feature">
-                <h3>One SSH endpoint, no fuss</h3>
-                <p>You point outpost at one dev box and it handles everything &mdash; cloning, pushing, fetching, file transfer, agent launch. No <code>tmux</code>, no <code>screen</code>, no fiddly remote setup. Just <code>ssh user@host</code> and a matching <code>$HOME</code>.</p>
             </div>
             <div class="feature">
                 <h3>Multiple Claude sessions, parallel</h3>
@@ -488,10 +476,6 @@
     <section class="section">
         <h2>Heads up</h2>
         <div class="features">
-            <div class="feature">
-                <h3>Matching <code>$HOME</code> required</h3>
-                <p>Claude bakes absolute paths into session files, so the remote needs the same <code>$HOME</code> as your laptop. In practice that means same username + same OS family. Outpost checks this at connect time and refuses to operate on a mismatch.</p>
-            </div>
             <div class="feature">
                 <h3>Local edits during a send-away are discarded</h3>
                 <p>Once you&rsquo;ve sent the project away, the remote is the live copy. Anything you type or edit locally in the meantime &mdash; including Claude&rsquo;s own trailing turns &mdash; gets overwritten when you bring the project back. The CLI prompts <code>y/N</code> first.</p>

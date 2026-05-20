@@ -29,11 +29,9 @@ Two slash commands inside Claude:
   (commits, uncommitted edits, updated session transcript), resumes
   locally.
 
-Under the hood, outpost runs a **FUSE filesystem** mounted at
-`~/.claude/` — every read and write transparently passes through to a
-real backing directory on disk. Claude Code keeps working exactly as
-today, while outpost taps every session-file write so it can stream
-the transcript to your remote in real time.
+Under the hood, outpost mounts a **FUSE filesystem** at `~/.claude/` —
+every read and write passes straight through to a real directory on
+disk at kernel speed. Never in your way, incredibly efficient.
 
 ## Install
 
@@ -64,10 +62,6 @@ down with `./scripts/dev-remote.sh down`.
 
 ## Heads up
 
-- The remote needs the **same `$HOME`** as your laptop — Claude bakes
-  absolute paths into session files. In practice that means same
-  username + same OS family. The daemon checks this at connect time
-  and refuses to operate on a mismatch.
 - **Local edits after `/send-away` are discarded** when you run
   `/bring-back`. The remote is the live copy; anything you do locally
   in the meantime — including Claude's own trailing turns — gets
