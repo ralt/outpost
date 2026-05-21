@@ -82,4 +82,4 @@ FUSE overlay, SSH transport, sync engine, send-away pipeline.
 
 ## License
 
-TBD.
+MIT. See [`LICENSE`](LICENSE).
