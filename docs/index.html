@@ -117,6 +117,30 @@
         .story p + p { margin-top: 0.85rem; }
         .story strong { color: var(--text); }
 
+        /* Notice / abandoned banner */
+        .notice {
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            border-left: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 2rem 0;
+            font-size: 1rem;
+            color: var(--text);
+        }
+        .notice .label {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.65rem;
+        }
+        .notice p + p { margin-top: 0.75rem; }
+        .notice strong { color: var(--text); }
+        .historical { opacity: 0.72; }
+
         /* Sections */
         .section {
             padding: 4rem 0;
@@ -366,19 +390,25 @@
     <p class="tagline">Hand off your Claude Code session to a remote machine so it keeps working headlessly while you&rsquo;re away. Bring the result back when you&rsquo;re ready.</p>
     <div class="cta-row">
         <a href="https://github.com/ralt/outpost" class="cta">View on GitHub</a>
-        <a href="#try-it" class="cta secondary">Try it</a>
+        <a href="#why-abandoned" class="cta secondary">Why abandoned</a>
     </div>
 </div>
 
 <div class="container">
 
-    <section class="story">
+    <section class="notice">
+        <span class="label">⚠ Abandoned</span>
+        <p>Outpost&rsquo;s whole premise &mdash; run <code>claude -p --resume</code> on your dev box against the <em>same</em> Pro / Max / Team plan you use locally &mdash; stops working once Anthropic rolls out the change that requires <code>claude -p</code> (headless mode) to authenticate with an Anthropic API key, billed per token and separate from the subscription.</p>
+        <p>The &ldquo;hand the laptop&rsquo;s session off to the cloud and keep going on the same plan&rdquo; trick is no longer available, so outpost has no remaining reason to exist. The code in this repo is a working snapshot of how far it got; it isn&rsquo;t going to be developed further. Specs and source are kept up for reference.</p>
+    </section>
+
+    <section class="story historical">
         <p>I&rsquo;m pairing with Claude on my laptop. I need to step away &mdash; close the lid, go to a meeting, get on a flight. I want the agent to keep working <strong>autonomously</strong> on my configured dev box, picking up exactly where we left off.</p>
         <p>When I&rsquo;m back, I type <code>/bring-back</code> and resume work locally with the remote&rsquo;s progress applied. The agent on the remote is fully headless &mdash; there&rsquo;s nothing to attach to, by design. &ldquo;Work while I&rsquo;m away&rdquo; is the whole point.</p>
     </section>
 
-    <section class="section">
-        <h2>How it works</h2>
+    <section class="section historical">
+        <h2>How it was supposed to work</h2>
         <div class="steps">
             <div class="step">
                 <div class="number">1</div>
@@ -398,8 +428,8 @@
         </div>
     </section>
 
-    <section class="section">
-        <h2>What it looks like</h2>
+    <section class="section historical">
+        <h2>What it looked like</h2>
         <div class="terminal">
             <div class="terminal-bar">
                 <span class="dot red"></span>
@@ -429,8 +459,8 @@
         </div>
     </section>
 
-    <section class="section">
-        <h2>What you get</h2>
+    <section class="section historical">
+        <h2>What you would have gotten</h2>
         <div class="features">
             <div class="feature">
                 <h3>Fully transparent</h3>
@@ -447,34 +477,8 @@
         </div>
     </section>
 
-    <section class="section" id="try-it">
-        <h2>Try it</h2>
-        <div class="setup-steps">
-            <div class="setup-step">
-                <h3>Install</h3>
-                <p>Clone the repo and run the install script. It builds outpost, drops a default config at <code>~/.config/outpost/config.ini</code>, and starts it as a user service so it&rsquo;s up every time you log in.</p>
-                <div class="code-block"><span class="cmd">git clone</span> https://github.com/ralt/outpost<br><span class="cmd">cd</span> outpost && <span class="cmd">./scripts/install.sh</span></div>
-            </div>
-            <div class="setup-step">
-                <h3>Point it at your dev box</h3>
-                <p>Edit the <code>[remote]</code> section of <code>~/.config/outpost/config.ini</code>:</p>
-                <div class="code-block"><span class="comment"># ~/.config/outpost/config.ini</span><br>[remote]<br>host = alice@dev-box.example.com<br>port = 22<br>identity_file = /home/alice/.ssh/id_ed25519</div>
-                <p>Full setup details &mdash; SSH access, matching <code>$HOME</code>, what binaries need to be on <code>PATH</code>, and a troubleshooting table mapped to every error code outpost can return &mdash; live in the <a href="https://github.com/ralt/outpost/blob/main/docs/remote-setup.md">remote setup guide</a>.</p>
-            </div>
-            <div class="setup-step">
-                <h3>Send-away</h3>
-                <p>From any Claude project, type <code>/send-away</code>. Outpost ships the project to your dev box, launches a headless agent there, and tells you to walk away. Come back any time and type <code>/bring-back</code>.</p>
-            </div>
-            <div class="setup-step">
-                <h3>Want to try it first without setting up a real dev box?</h3>
-                <p>There&rsquo;s a Docker-based fake remote you can spin up locally. It mirrors your username and <code>$HOME</code>, trusts your SSH key, and ships a stub <code>claude</code> binary so the round trip works end-to-end.</p>
-                <div class="code-block"><span class="cmd">./scripts/dev-remote.sh up</span>     <span class="comment"># spin up the test remote + rewrite config</span><br><span class="cmd">./scripts/dev-remote.sh down</span>   <span class="comment"># clean up when you're done</span></div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section">
-        <h2>Heads up</h2>
+    <section class="section historical">
+        <h2>Caveats it would have had</h2>
         <div class="features">
             <div class="feature">
                 <h3>Local edits during a send-away are discarded</h3>
@@ -487,6 +491,29 @@
             <div class="feature">
                 <h3>One remote at a time</h3>
                 <p>One outpost daemon talks to one configured dev box. No fan-out, no load balancing, no orchestration. If you want a different remote for a different project, you swap the config and reload.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="why-abandoned">
+        <h2>Why abandoned</h2>
+        <div class="setup-steps">
+            <div class="setup-step">
+                <h3>The quiet assumption</h3>
+                <p>Outpost was built on the assumption that a Pro / Max / Team subscription to Claude Code authenticates <code>claude</code> <em>whether you run it interactively or with <code>-p</code></em>, and on <em>any</em> machine that subscription is signed into. So if your laptop can run <code>claude</code> against your plan, your dev box can too &mdash; same plan, no extra cost, no separate keys.</p>
+                <p>That made the whole &ldquo;hand off to a remote, come back later&rdquo; loop a matter of plumbing &mdash; FUSE overlay, SSH transport, git mirror, session streaming &mdash; rather than billing.</p>
+            </div>
+            <div class="setup-step">
+                <h3>What changed</h3>
+                <p>Anthropic is closing that loophole: headless <code>claude -p</code> will require an Anthropic API key, billed per token and not bundled with the Pro / Max / Team subscription.</p>
+            </div>
+            <div class="setup-step">
+                <h3>Why that kills it</h3>
+                <p>Once the change is live, sending a session &ldquo;away&rdquo; means paying twice &mdash; once for your subscription, again per token for the headless agent. The value proposition (&ldquo;use what you already pay for, on a bigger machine&rdquo;) collapses. Rather than pivot to &ldquo;outpost, but bring your own API budget,&rdquo; the project is being parked.</p>
+            </div>
+            <div class="setup-step">
+                <h3>What&rsquo;s still useful here</h3>
+                <p>If you want to read the code for ideas, the bits that don&rsquo;t depend on the auth model still apply: the FUSE passthrough with virtual overlay entries (<code>internal/fusefs/</code>), the single persistent <code>ssh.Client</code> with TOFU, <code>$HOME</code> check, keepalive, and reconnect (<code>internal/sshx/</code>), and the fsnotify project watcher with go-git mirror push + sftp session streaming (<code>internal/sync/</code>). The build is still green and the dev-remote round trip still works against a stub <code>claude</code>.</p>
             </div>
         </div>
     </section>
